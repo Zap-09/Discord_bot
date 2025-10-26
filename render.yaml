@@ -1,0 +1,13 @@
+services:
+  - type: background_worker
+    name: discord-bot
+    env: python
+    plan: free
+    repo: https://github.com/Zap-09/Discord_bot
+    branch: main
+    start_command: python discord_bot.py
+    env_vars:
+      - key: TOKEN
+        from_secret: discord_token
+      - key: CHANNEL_ID
+        from_secret: channel_id
