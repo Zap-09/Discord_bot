@@ -1,12 +1,11 @@
 import discord
 from discord.ext import commands
 import os
-from dotenv import load_dotenv
-
 import webserver
 
-load_dotenv()
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.environ["CHANNEL_ID"])
+
+TOKEN = os.environ["TOKEN"]
 
 
 intents = discord.Intents.default()
@@ -32,4 +31,4 @@ async def clear(ctx):
 
 webserver.keep_alive()
 
-bot.run(os.getenv("TOKEN"))
+bot.run(TOKEN)
