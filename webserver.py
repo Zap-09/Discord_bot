@@ -1,11 +1,11 @@
-from flask import Flask
+from flask import Flask, render_template
 from threading import Thread
 
 app = Flask("")
 
 @app.route("/")
 def home():
-    return "Discord bot is running"
+    return render_template("index.html")
 
 
 def run():
