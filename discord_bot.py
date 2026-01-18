@@ -1,17 +1,20 @@
-import asyncio
+import os
+
+import dotenv
+
 import discord
 from discord.ext import commands
-import os
-import webserver
-import dotenv
-import math
+
+import flask_server
+from utils import delete_message_with_delay
+from utils.helper import find_nether_fortress, to_number
+
 
 dotenv.load_dotenv()
-CHANNEL_ID = int(os.environ["CHANNEL_ID"])
 
 TOKEN = os.environ["TOKEN"]
 
-DELETE_DELAY = 5 * 60
+DELETE_DELAY = 5
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,67 +31,59 @@ TEMP_CHANNEL_ID = int(os.getenv("TEMP_CHANNEL_ID"))
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
-async def clear(ctx):
-    if ctx.channel.id != CHANNEL_ID:
+async def clear(ctx,count:str|None = None, by_admin = False):
+    """
+    Clear messages in the current channel. Use a number or 'all'.
+    If 'all' is used 'True' be there after 'all'.
+
+     Examples:
+         /clear all True
+
+         /clear 10
+    """
+
+    if count is None:
+        await ctx.reply("The count must be a number or 'all'", delete_after=5)
         await ctx.message.delete()
-        await ctx.send("This command cannot be used in this channel.", delete_after=5)
         return
-    await ctx.channel.purge(limit=None)
 
+    if count == "all":
+        if not by_admin:
+            await ctx.reply("Please add True after 'all' to confirm",delete_after=5)
+            return
+        await ctx.channel.purge()
+        return
 
-def to_number(s):
     try:
-        return float(s)
+        count = int(count) + 1
     except ValueError:
-        pass
-    try:
-        return int(s)
-    except ValueError:
-        raise ValueError(f"Cannot convert {s!r} to int or float")
+        await ctx.reply("The count must be a number", delete_after=5)
+        await ctx.message.delete()
+        return
+
+    await ctx.channel.purge(limit=count)
 
 
 
 @bot.command()
-async def fortress(ctx, x: float|int, y: float|int, z: float|int):
+async def fortress(ctx, x: str, y: str, z: str):
+    """ Finds 3 possible position where a Fortress/Bastion can generate """
     if ctx.author.bot:
         return
 
-    if x is None or y is None or z is None:
-        await ctx.reply("This command need 3 args (x, y, z). Please send all 3.",delete_after=10)
+    try:
+        x = to_number(x)
+        y = to_number(y)
+        z = to_number(z)
+    except ValueError:
+        await ctx.reply("Invalid argument. Please provide a number.", delete_after=10)
         await ctx.message.delete()
-    if x and y and z:
-        try:
-            x = to_number(x)
-            y = to_number(y)
-            z = to_number(z)
-        except ValueError:
-            await ctx.reply("Invalid argument. Please a number or a floating number", delete_after=10)
-            await ctx.message.delete()
-            return
-        except Exception as e:
-            await ctx.reply(f"Unexpected error: {e}")
-            return
+        return
+    except Exception as e:
+        await ctx.reply(f"Unexpected error: {e}")
+        return
 
-        await find_nether_fortress(ctx,x,y,z)
-
-
-
-async def find_nether_fortress(ctx,player_x, player_y, player_z):
-    x = math.floor(player_x / 480) * 480
-    z = math.floor(player_z / 480) * 480
-    if player_y:
-        pass
-
-    possible_cord1 = f"X = {x + 104} , Z = {z + 104}"
-    possible_cord2 = f"X = {x + 208} , Z = {z + 208}"
-    possible_cord3 = f"X = {x + 312} , Z = {z + 312}"
-
-    await ctx.send(f"Possible Fortress at:\n {possible_cord1} \n {possible_cord2} \n {possible_cord3}")
-
-
-async def delete_message_with_delay(ctx):
-    await asyncio.sleep(DELETE_DELAY)
-    await ctx.delete()
+    await find_nether_fortress(ctx, x, y, z)
 
 
 @bot.event
@@ -96,9 +91,10 @@ async def on_message(message):
     if message.author.bot:
         return
     if message.channel.id == TEMP_CHANNEL_ID:
-        await delete_message_with_delay(message)
+        await delete_message_with_delay(message,DELETE_DELAY)
     await bot.process_commands(message)
 
 
-webserver.keep_alive()
-bot.run(TOKEN)
+if __name__ == "__main__":
+    flask_server.keep_alive()
+    bot.run(TOKEN)
