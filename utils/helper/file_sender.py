@@ -2,10 +2,6 @@ import aiohttp
 import os
 import zipfile as zf
 import shutil
-import asyncio
-
-from gofilepy import GofileClient
-from gofilepy.exceptions import GofileAPIException
 
 media_ext = (".png",".jpg",".gif",".mp4",".webm","mov")
 
@@ -39,26 +35,24 @@ def zip_files(folder_path:str, zip_save_location:str, zip_name:str):
 
 
 async def send_file(file_path:str):
-    status = True
-    gofile: GofileClient = await connect_to_gofile()
-    if gofile is None:
-        status = False
-        return "Failed to connect to Gofile", status
-    gofile_resp = gofile.upload(file=open(file_path, "rb"))
-    link = gofile_resp.page_link
-    return link, status
+    upload_url = "https://upload.gofile.io/uploadfile"
+    async with aiohttp.ClientSession() as session:
+        form = aiohttp.FormData()
+        form.add_field(
+            "file",
+            open(file_path, "rb"),
+            filename=os.path.basename(file_path)
+        )
 
+        async with session.post(upload_url, data=form) as resp:
+            if resp.status != 200:
+                return None, False
+            result = await resp.json()
+            if result.get("status") not in ("ok", "success"):
+                return None, False
 
-async def connect_to_gofile():
-    retry_count = 0
-    while retry_count < 5:
-        try:
-            return GofileClient()
-        except GofileAPIException:
-            await asyncio.sleep(1)
-            retry_count += 1
-    print("Failed to connect to Gofile")
-    return None
+            return result["data"].get("downloadPage"), True
+
 
 
 

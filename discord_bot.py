@@ -89,7 +89,10 @@ async def fortress(ctx, x: str, y: str, z: str):
 
 @bot.command()
 async def zip_media(ctx: commands.Context,message_url:str):
+    """ Downloads a message's images/videos and returns a zip file link """
     await ctx.defer()
+
+    await ctx.reply(f"Your request is being precessed",delete_after=5)
 
     try:
         _guild_id, channel_id, message_id = message_url.rsplit("/", 3)[-3:]
