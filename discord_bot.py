@@ -154,7 +154,10 @@ async def on_message(message):
     if message.author.bot:
         return
     if message.channel.id == TEMP_CHANNEL_ID:
-        await delete_message_with_delay(message,DELETE_DELAY)
+        bot.loop.create_task(
+            delete_message_with_delay(message, DELETE_DELAY)
+        )
+
     await bot.process_commands(message)
 
 
