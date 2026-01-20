@@ -148,6 +148,8 @@ async def zip_media(ctx: commands.Context,message_url:str):
 
     return await ctx.reply(f"Here is your download link: {gofile_link}\n")
 
+
+@bot.event
 async def on_message(message):
     if message.author.bot:
         return
