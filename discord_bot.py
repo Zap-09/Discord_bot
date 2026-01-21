@@ -67,7 +67,7 @@ async def clear(ctx,count:str|None = None, by_admin = False):
 
 @bot.command()
 async def fortress(ctx, x: str, y: str, z: str):
-    """ Finds 3 possible position where a Fortress/Bastion can generate """
+    """ Finds all possible position where a Fortress/Bastion can generate in a Quadrant """
     if ctx.author.bot:
         return
 
