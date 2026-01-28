@@ -13,6 +13,8 @@ from utils.helper import download_file, zip_files, send_file, clean_up
 dotenv.load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
+TEMP_CHANNEL_ID = int(os.getenv("TEMP_CHANNEL_ID"))
+
 
 DELETE_DELAY = 5
 
@@ -27,7 +29,11 @@ async def on_ready():
     print(f"{bot.user} is online")
 
 
-TEMP_CHANNEL_ID = int(os.getenv("TEMP_CHANNEL_ID"))
+@bot.event
+async def on_command_error(_ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
+    raise error
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
